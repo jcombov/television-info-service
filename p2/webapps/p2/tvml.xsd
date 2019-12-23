@@ -1,0 +1,115 @@
+<?xml version="1.0" encoding='UTF-8' standalone='no'?>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema">
+    <xs:element name="Programacion">        <!-- elemento raíz del XML -->
+        <xs:complexType>
+            <xs:sequence>
+                <xs:element name="Fecha" type="tdate"/>
+                <!-- Obligatorio; solo 1 vez -->
+                <xs:element name="Canal" minOccurs="1" maxOccurs="unbounded">                    <!-- Mínimo 1 país por archivo IML, sin cota superior -->
+
+                    <xs:complexType>
+                        <xs:sequence>
+                            <xs:element name="NombreCanal" type="xs:string"/>
+
+                            <xs:element name="Grupo" minOccurs="0" type="xs:string"/>
+                            <!-- Grupo opcional -->
+
+
+                            <xs:element name="Programa" minOccurs="1" maxOccurs="unbounded">                                <!--Mínimo un programa, tipo mixed ya que puede haber comentarios -->
+                                <xs:complexType mixed="true">
+                                    <xs:sequence>
+                                        <xs:element name="NombrePrograma" type="xs:string"/>
+                                        <xs:element name="Categoria" type="tcat"/>
+                                        <xs:element name="HoraInicio" type="ttime"/>
+                                        <xs:choice>
+
+                                            <xs:element name="Duracion" type="tmin"/>
+                                            <!-- Solo se puede especificar uno de estos 2 elementos -->
+                                            <xs:element name="HoraFin" type="ttime"/>
+                                        </xs:choice>
+                                        <xs:element name="OtraEmision" minOccurs="0">
+                                            <xs:complexType>
+                                                <xs:sequence>
+                                                    <xs:element name="TVML" type="xs:anyURI"/>
+                                                </xs:sequence>
+                                                <xs:attribute name="fecha" type="tdate"/>
+                                            </xs:complexType>
+                                        </xs:element>
+                                    </xs:sequence>
+
+
+                                    <xs:attribute name="langs" type="tlangs"/>
+                                    <xs:attribute name="edadminima" type="xs:nonNegativeInteger" use="required"/>
+                                </xs:complexType>
+
+                            </xs:element>
+                        </xs:sequence>
+                        <xs:attribute name="lang" type="tlang"/>
+                        <xs:attribute name="idCanal" type="tident" use="required"/>
+
+                    </xs:complexType>
+
+                </xs:element>
+            </xs:sequence>
+        </xs:complexType>
+    </xs:element>
+
+    <!-- Tipo idioma-->
+    <xs:simpleType name="tlang">
+        <xs:restriction base="xs:string">
+            <xs:pattern value="[a-z]{2}"/>
+        </xs:restriction>
+    </xs:simpleType>
+
+
+
+ <xs:simpleType name="tlangs">
+        <xs:restriction base="xs:string">
+            <xs:pattern value="([a-z]{2})(\s[a-z]{2})*"/>
+        </xs:restriction>
+    </xs:simpleType>
+
+    <!-- Tipo de fecha aaaa/mm/dd -->
+    <xs:simpleType name="tdate">
+        <xs:restriction base="xs:string">
+            <xs:pattern value= "[0-9]{4}/[0-9]{2}/[0-9]{2}"/>
+        </xs:restriction>
+    </xs:simpleType>
+
+    <!-- Tipo de hora de inicio y fin  hh:mm -->
+    <xs:simpleType name="ttime">
+        <xs:restriction base="xs:string">
+            <xs:pattern value= "[0-9]{2}:[0-9]{2}"/>
+        </xs:restriction>
+    </xs:simpleType>
+
+    <!-- Tipo identificador, entero no negativo -->
+    <xs:simpleType name="tident">
+        <xs:restriction base="xs:nonNegativeInteger">
+            <xs:minInclusive value="1"/>
+        </xs:restriction>
+    </xs:simpleType>
+
+    <!-- Identificador de tiempo en minutos -->
+    <xs:simpleType name="tmin">
+        <xs:restriction base="xs:nonNegativeInteger">
+            <xs:minInclusive value="1"/>
+        </xs:restriction>
+    </xs:simpleType>
+
+
+    <!-- Tipo de categoría de un canal de televisión -->
+    <xs:simpleType name="tcat">
+        <xs:restriction base="xs:string">
+            <xs:enumeration value="Informativos"/>
+            <xs:enumeration value="Cine"/>
+            <xs:enumeration value="Deportes"/>
+            <xs:enumeration value="Infantiles"/>
+            <xs:enumeration value="Documentales"/>
+        </xs:restriction>
+    </xs:simpleType>
+
+
+
+
+</xs:schema>
