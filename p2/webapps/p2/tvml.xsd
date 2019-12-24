@@ -35,24 +35,31 @@
                                                 <xs:attribute name="fecha" type="tdate"/>
                                             </xs:complexType>
                                         </xs:element>
+
                                     </xs:sequence>
 
 
                                     <xs:attribute name="langs" type="tlangs"/>
                                     <xs:attribute name="edadminima" type="xs:nonNegativeInteger" use="required"/>
+
                                 </xs:complexType>
 
                             </xs:element>
                         </xs:sequence>
-                        <xs:attribute name="lang" type="tlang"/>
+                        <xs:attribute name="lang" type="tlang" use="required"/>
                         <xs:attribute name="idCanal" type="tident" use="required"/>
-
                     </xs:complexType>
 
                 </xs:element>
             </xs:sequence>
         </xs:complexType>
+        <xs:unique name="uniqueCanal">
+            <xs:selector xpath="Canal"/>
+            <xs:field xpath="@idCanal"/>
+        </xs:unique>
     </xs:element>
+
+
 
     <!-- Tipo idioma-->
     <xs:simpleType name="tlang">
@@ -63,7 +70,7 @@
 
 
 
- <xs:simpleType name="tlangs">
+    <xs:simpleType name="tlangs">
         <xs:restriction base="xs:string">
             <xs:pattern value="([a-z]{2})(\s[a-z]{2})*"/>
         </xs:restriction>
