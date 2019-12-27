@@ -2,6 +2,7 @@ package p2;
 
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.io.FileInputStream;
 import java.net.URL;
 import java.util.*;
 import java.util.Map.*;
@@ -12,7 +13,7 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-
+import java.lang.String;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.xpath.XPath;
@@ -46,12 +47,13 @@ public class Sint82P2 extends HttpServlet {
    private static final String BACK_BUTTON = "<br><input type=\"submit\" value=\"Atrás\" id=\"back_button\"";
    private static final String BEG_BUTTON = "<br><input type=\"submit\"  value=\"Inicio\" id=\"beginning_button\" onClick=\"document.forms[0].pfase.value='01'\"/>";
    private static final String END_FORM = "</form>";
-   private static final String TVML_INI = "http://gssi.det.uvigo.es/users/agil/public_html/SINT/19-20/tvml-2004-12-01.xml";
+   private static String TVML_INI = "p2/tvml/tvml-2004-12-01.xml";
    private static String URL_XSD = "p2/tvml.xsd";
 
    public void init(ServletConfig config) {
       // Empezamos leyendo el fichero inicial, y a partir de él sacamos el resto
       URL_XSD = config.getServletContext().getRealPath(URL_XSD);
+      TVML_INI = config.getServletContext().getRealPath(TVML_INI);
       TVML_browser(TVML_INI);
       // A partir de aquí, ya podemos procesar peticiones GET de los clientes
 
@@ -62,61 +64,74 @@ public class Sint82P2 extends HttpServlet {
       PrintWriter out = res.getWriter();
       String p = req.getParameter("p");
       String pfase = req.getParameter("pfase");
+      boolean auto = req.getParameter("auto") == null ? false : req.getParameter("auto").equals("si");
 
-      out.println("<html>");
-      out.println("<head>");
-      out.println("<title>Servicio de información musical</title>"); // título de la página
-      out.println("<meta charset=\"UTF-8\"/>"); // codificación de la página (UTF-8)
-      out.println("<LINK rel=\"stylesheet\" href=\"p2/p2.css\"     type=\"text/css\" />");
-      out.println("</head>");
+      if (auto) {
+         res.setContentType("text/xml");
+         out.println("<?xml version=\"1.0\" encoding=\"utf-8\"?>");
+      } else {
+         res.setContentType("text/html");
+         out.println("<html>");
+         out.println("<head>");
+         out.println("<title>Servicio de información musical</title>"); // título de la página
+         out.println("<meta charset=\"UTF-8\"/>"); // codificación de la página (UTF-8)
+         out.println("<LINK rel=\"stylesheet\" href=\"p2/p2.css\"     type=\"text/css\" />");
+         out.println("</head>");
+      }
 
       if (pfase == null)
          pfase = "01";
 
-      if (p == null || !p.equals("p4sss1nt82")) {
-         out.println("<body>");
-         out.println("<h1> Contraseña incorrecta! </h1>");
-         out.println("</body>");
-         out.println("</html>");
-         return;
+      if (p == null) {
+
+         out.println(auto ? "<wrongRequest>no passwd</wrongRequest>"
+               : "<body><h1> Contraseña incorrecta! </h1></body></html>");
+
       }
 
-      switch (pfase) {
+      else if (!p.equals("p4sss1nt82")) {
 
-      case "01":
+         out.println(auto ? "<wrongRequest>bad passwd</wrongRequest>"
+               : "<body><h1> Contraseña incorrecta! </h1></body></html>");
 
-         this.doGetFase01(req, res);
+      }
 
-         break;
+      else {
 
-      case "02":
-         this.doGetFase02(req, res);
-         break;
+         switch (pfase) {
 
-      case "11":
+         case "01":
 
-         this.doGetFase11(req, res);
+            this.doGetFase01(req, res);
 
-         break;
-      case "12":
+            break;
 
-         this.doGetFase12(req, res);
-         break;
+         case "02":
+            this.doGetFase02(req, res);
+            break;
 
-      case "13":
+         case "11":
 
-         this.doGetFase13(req, res);
-         break;
+            this.doGetFase11(req, res);
 
-      default:
+            break;
+         case "12":
 
-         out.println("<body>");
-         out.println("<h1> Pfase incorrecto </h1>");
-         out.println("</body>");
-         out.println("</html>");
+            this.doGetFase12(req, res);
+            break;
 
-         break;
+         case "13":
 
+            this.doGetFase13(req, res);
+            break;
+
+         default:
+
+            this.doGetFase01(req, res);
+
+            break;
+
+         }
       }
 
    }
@@ -124,31 +139,36 @@ public class Sint82P2 extends HttpServlet {
    private void doGetFase01(HttpServletRequest req, HttpServletResponse res) throws IOException, ServletException {
 
       PrintWriter out = res.getWriter();
+      boolean auto = req.getParameter("auto") == null ? false : req.getParameter("auto").equals("si");
 
-      out.println("<body><h1>Servicio de información sobre canales TV</h1>");
+      if (auto) {
+         // XML
+         out.println("<service> <status>OK</status> </service>");
+      } else {
+         out.println("<body><h1>Servicio de información sobre canales TV</h1>");
 
-      out.println("<h2>Bienvenido al servicio de consulta de información sobre canales de TV</h2> ");
-      out.println("<br><a href=\"P2TV?pfase=02&p=" + req.getParameter("p") + "\">Listar ficheros IML erróneos</a>"); // Opción
-                                                                                                                     // para
-                                                                                                                     // mostrar
-                                                                                                                     // los
-                                                                                                                     // ficheros
-                                                                                                                     // erróneos
-                                                                                                                     // (fase
-                                                                                                                     // 02)
-      out.println("<br><h3>Selecciona una consulta:</h3> "// Opción para mostrar la lista de años (fase 11)
-            + INI_FORM
-            + "<input type=\"radio\" name=\"pfase\" value=\"11\" checked/> <b>Consulta 1:</b> Películas de un día en un canal <br><br>" // ?pfase=11
-            + "<input type=\"hidden\" name=\"p\" value=\"" + req.getParameter("p") + "\"/>" + SEND_BUTTON);
+         out.println("<h2>Bienvenido al servicio de consulta de información sobre canales de TV</h2> ");
+         out.println("<br><a href=\"P2TV?pfase=02&p=" + req.getParameter("p") + "\">Listar ficheros IML erróneos</a>"); // Opción
+                                                                                                                        // para
+                                                                                                                        // mostrar
+                                                                                                                        // los
+                                                                                                                        // ficheros
+                                                                                                                        // erróneos
+                                                                                                                        // (fase
+                                                                                                                        // 02)
+         out.println("<br><h3>Selecciona una consulta:</h3> "// Opción para mostrar la lista de años (fase 11)
+               + INI_FORM
+               + "<input type=\"radio\" name=\"pfase\" value=\"11\" checked/> <b>Consulta 1:</b> Películas de un día en un canal <br><br>" // ?pfase=11
+               + "<input type=\"hidden\" name=\"p\" value=\"" + req.getParameter("p") + "\"/>" + SEND_BUTTON);
 
-      out.println("</body>");
-      out.println("</html>");
-
+         out.println("</body>");
+         out.println("</html>");
+      }
    }
 
    private void doGetFase02(HttpServletRequest req, HttpServletResponse res) throws IOException, ServletException {
 
-      boolean auto = false;
+      boolean auto = req.getParameter("auto") == null ? false : req.getParameter("auto").equals("si");
       PrintWriter out = res.getWriter();
       out.println(auto ? "<errores>" : "<h2>Ficheros erróneos</h2><br>");
 
@@ -198,32 +218,47 @@ public class Sint82P2 extends HttpServlet {
 
       out.println(auto ? "</fatalerrors>" : "</ul><br>");
 
+      out.println(auto ? "</errores>" : "</html>");
+
    }
 
    private void doGetFase11(HttpServletRequest req, HttpServletResponse res) throws IOException, ServletException {
       int i;
       PrintWriter out = res.getWriter();
+      boolean auto = req.getParameter("auto") == null ? false : req.getParameter("auto").equals("si");
       ArrayList<String> fechas = getC1Fechas();
 
-      out.println("<body><h1>Servicio de información sobre canales TV</h1>");
+      if (!auto) { // Respuesta HTML
+         out.println("<body><h1>Servicio de información sobre canales TV</h1>");
 
-      out.println("<h2>Consulta 1</h2> ");
+         out.println("<h2>Consulta 1</h2> ");
 
-      out.println("<br><h3>Selecciona una fecha:</h3> "); // Opción para mostrar la lista de años (fase 11)
-      out.println(INI_FORM);
-      for (i = 0; i < fechas.size(); i++) {
-         out.println(i == 0
-               ? "<input type=\"radio\" name=\"panio\" class=\"form_input\" value=\"" + fechas.get(i) + "\" checked/>  "
-                     + fechas.get(i) + "<br>"
-               : "<input type=\"radio\" name=\"panio\" class=\"form_input\" value=\"" + fechas.get(i) + "\" />  "
-                     + fechas.get(i) + "<br>");
+         out.println("<br><h3>Selecciona una fecha:</h3> "); // Opción para mostrar la lista de años (fase 11)
+         out.println(INI_FORM);
+         for (i = 0; i < fechas.size(); i++) {
+            out.println(i == 0
+                  ? "<input type=\"radio\" name=\"panio\" class=\"form_input\" value=\"" + fechas.get(i)
+                        + "\" checked/>  " + fechas.get(i) + "<br>"
+                  : "<input type=\"radio\" name=\"panio\" class=\"form_input\" value=\"" + fechas.get(i) + "\" />  "
+                        + fechas.get(i) + "<br>");
+         }
+         out.println("<input type=\"hidden\" name=\"p\" value=\"" + req.getParameter("p") + "\"/>");
+         out.println("<input type=\"hidden\" name=\"pfase\" value=\"11\"/>");
+         out.println(SEND_BUTTON + " onClick=\"document.forms[0].pfase.value='12'\"/>");
+         out.println(BACK_BUTTON + " onClick=\"document.forms[0].pfase.value='01'\"/>");
+         out.println(END_FORM + "</body>");
+         out.println("</html>");
+
+      } else { // Respuesta XML
+         out.println("<dias>");
+         for (i = 0; i < fechas.size(); i++) {
+
+            out.println("<dia>" + fechas.get(i) + "</dia>");
+         }
+
+         out.println("</dias>");
+
       }
-      out.println("<input type=\"hidden\" name=\"p\" value=\"" + req.getParameter("p") + "\"/>");
-      out.println("<input type=\"hidden\" name=\"pfase\" value=\"11\"/>");
-      out.println(SEND_BUTTON + " onClick=\"document.forms[0].pfase.value='12'\"/>");
-      out.println(BACK_BUTTON + " onClick=\"document.forms[0].pfase.value='01'\"/>");
-      out.println(END_FORM + "</body>");
-      out.println("</html>");
 
    }
 
@@ -231,32 +266,49 @@ public class Sint82P2 extends HttpServlet {
 
       PrintWriter out = res.getWriter();
       String fecha = req.getParameter("panio");
+      boolean auto = req.getParameter("auto") == null ? false : req.getParameter("auto").equals("si");
       int i;
       ArrayList<Canal> canal = getC1Canales(fecha);
       Collections.sort(canal, new Canal.sort_name());
 
-      out.println("<body><h1>Servicio de información sobre canales TV</h1>");
+      if (!auto) { // Respuesta html
+         out.println("<body><h1>Servicio de información sobre canales TV</h1>");
+         out.println("<h2>Consulta1: Fecha= " + fecha + "</h2> ");
+         out.println("<br><h3>Selecciona un canal:</h3> ");// Opción para mostrar la lista de años (fase 11)
+         out.println(INI_FORM);
+         for (i = 0; i < canal.size(); i++) {
+            out.println(i == 0
+                  ? "<input type=\"radio\" name=\"pcanal\" class=\"form_input\" value=\"" + canal.get(i).getcanal()
+                        + "\" checked>" + "<b>  Canal:  </b>" + canal.get(i).getcanal() + "<b>  Idioma:  </b>"
+                        + canal.get(i).getidioma() + "<b>  Grupo:  </b> " + canal.get(i).getgrupo() + "<br>"
+                  : "<input type=\"radio\" name=\"pcanal\" class=\"form_input\" value=\"" + canal.get(i).getcanal()
+                        + "\" > " + "<b>  Canal:  </b>" + canal.get(i).getcanal() + "<b>  Idioma:  </b>"
+                        + canal.get(i).getidioma() + "<b>  Grupo:  </b>" + canal.get(i).getgrupo() + "<br>");
+         }
+         out.println("<input type=\"hidden\" name=\"p\" value=\"" + req.getParameter("p") + "\"/>");
+         out.println("<input type=\"hidden\" name=\"panio\" value=\"" + req.getParameter("panio") + "\"/>");
+         out.println("<input type=\"hidden\" name=\"pfase\" value=\"11\"/>");
+         out.println(SEND_BUTTON + " onClick=\"document.forms[0].pfase.value='13'\"/>");
+         out.println(BACK_BUTTON + " onClick=\"document.forms[0].pfase.value='11'\"/>");
+         out.println(BEG_BUTTON);
+         out.println(END_FORM + "</body>");
+         out.println("</html>");
 
-      out.println("<h2>Consulta1: Fecha= " + fecha + "</h2> ");
-      out.println("<br><h3>Selecciona un canal:</h3> ");// Opción para mostrar la lista de años (fase 11)
-      out.println(INI_FORM);
-      for (i = 0; i < canal.size(); i++) {
-         out.println(i == 0
-               ? "<input type=\"radio\" name=\"pcanal\" class=\"form_input\" value=\"" + canal.get(i).getcanal()
-                     + "\" checked>" + "<b>  Canal:  </b>" + canal.get(i).getcanal() + "<b>  Idioma:  </b>"
-                     + canal.get(i).getidioma() + "<b>  Grupo:  </b> " + canal.get(i).getgrupo() + "<br>"
-               : "<input type=\"radio\" name=\"pcanal\" class=\"form_input\" value=\"" + canal.get(i).getcanal()
-                     + "\" > " + "<b>  Canal:  </b>" + canal.get(i).getcanal() + "<b>  Idioma:  </b>"
-                     + canal.get(i).getidioma() + "<b>  Grupo:  </b>" + canal.get(i).getgrupo() + "<br>");
+      } else { // Respuesta xml
+
+         if (fecha == null) { // No hay parametro panio
+            out.println("<wrongRequest>no param:panio</wrongRequest>");
+            
+         } else {
+            out.println("<canales>");
+            for (i = 0; i < canal.size(); i++) {
+
+               out.println("<canal idioma=\"" + canal.get(i).getidioma() + "\" grupo=\"" + canal.get(i).getgrupo()
+                     + "\">" + canal.get(i).getcanal() + "</canal>");
+            }
+            out.println("</canales>");
+         }
       }
-      out.println("<input type=\"hidden\" name=\"p\" value=\"" + req.getParameter("p") + "\"/>");
-      out.println("<input type=\"hidden\" name=\"panio\" value=\"" + req.getParameter("panio") + "\"/>");
-      out.println("<input type=\"hidden\" name=\"pfase\" value=\"11\"/>");
-      out.println(SEND_BUTTON + " onClick=\"document.forms[0].pfase.value='13'\"/>");
-      out.println(BACK_BUTTON + " onClick=\"document.forms[0].pfase.value='11'\"/>");
-      out.println(BEG_BUTTON);
-      out.println(END_FORM + "</body>");
-      out.println("</html>");
 
    }
 
@@ -265,25 +317,49 @@ public class Sint82P2 extends HttpServlet {
       PrintWriter out = res.getWriter();
       String fecha = req.getParameter("panio");
       String canal = req.getParameter("pcanal");
+      boolean auto = req.getParameter("auto") == null ? false : req.getParameter("auto").equals("si");
       int i;
       ArrayList<Programa> programa = getC1Peliculas(fecha, canal);
+      Collections.sort(programa, new Programa.sort_length());
 
-      out.println("<body><h1>Servicio de información sobre canales TV</h1>");
-      out.println("<h2>Consulta1: Fecha= " + fecha +"    Canal = "+canal  +"</h2> ");
-      out.println("<br><h3>Mostrar resultado:</h3> ");// Opción para mostrar la lista de años (fase 11)
-      out.println(INI_FORM);
-      for (i = 0; i < programa.size(); i++) {
-         out.println((i+1) + "<b> . Titulo:  </b>" + programa.get(i).getpelicula() + "<b>  Hora:  </b>"
-                     + programa.get(i).gethora() + "<br>");
+      if (!auto) { // Respuesta html
+         out.println("<body><h1>Servicio de información sobre canales TV</h1>");
+         out.println("<h2>Consulta1: Fecha= " + fecha + "    Canal = " + canal + "</h2> ");
+         out.println("<br><h3>Mostrar resultado:</h3> ");// Opción para mostrar la lista de años (fase 11)
+         out.println(INI_FORM);
+         for (i = 0; i < programa.size(); i++) {
+            out.println((i + 1) + "<b> . Titulo:  </b>" + programa.get(i).getpelicula() + "<b>  Hora:  </b>"
+                  + programa.get(i).gethora() + "<b>  Edad Minima:  </b>" + programa.get(i).getedad()
+                  + "<b>  Resumen:  </b>" + programa.get(i).getcomentario() + "<br>");
+         }
+         out.println("<input type=\"hidden\" name=\"p\" value=\"" + req.getParameter("p") + "\"/>");
+         out.println("<input type=\"hidden\" name=\"pfase\" value=\"11\"/>");
+
+         out.println("<input type=\"hidden\" name=\"panio\" value=\"" + req.getParameter("panio") + "\"/>");
+         out.println(BACK_BUTTON + " onClick=\"document.forms[0].pfase.value='12'\"/>");
+         out.println(BEG_BUTTON);
+         out.println(END_FORM + "</body>");
+         out.println("</html>");
+
+      } else { // Respuesta xml
+
+         if (fecha == null) { // No hay parametro panio
+            out.println("<wrongRequest>no param:panio</wrongRequest>");
+
+         } else if (canal == null) { // No hay parametro pcanal
+            out.println("<wrongRequest>no param:pcanal</wrongRequest>");
+            
+         } else {
+            out.println("<peliculas>");
+            for (i = 0; i < programa.size(); i++) {
+
+               out.println("<pelicula edad=\"" + programa.get(i).getedad() + "\" hora=\"" + programa.get(i).gethora()
+                     + "\" resumen=\"" + programa.get(i).getcomentario() + "\">" + programa.get(i).getpelicula()
+                     + "</pelicula>");
+            }
+            out.println("</peliculas>");
+         }
       }
-      out.println("<input type=\"hidden\" name=\"p\" value=\"" + req.getParameter("p") + "\"/>");
-      out.println("<input type=\"hidden\" name=\"pfase\" value=\"11\"/>");
-
-      out.println("<input type=\"hidden\" name=\"panio\" value=\"" + req.getParameter("panio") + "\"/>");
-      out.println(BACK_BUTTON + " onClick=\"document.forms[0].pfase.value='12'\"/>");
-      out.println(BEG_BUTTON);
-      out.println(END_FORM + "</body>");
-      out.println("</html>");
 
    }
 
@@ -329,7 +405,10 @@ public class Sint82P2 extends HttpServlet {
       dbuilder.setErrorHandler(errorHandler);
       Document doc = null;
       try {
-         doc = dbuilder.parse(new InputSource(new URL(fichero).openStream())); // lee el fichero IML base,...
+
+         doc = dbuilder.parse(new InputSource(new FileInputStream(fichero))); // lee el fichero IML base,...
+         // doc = dbuilder.parse(new InputSource(new URL(fichero).openStream())); // lee
+         // el fichero IML base,...
       } catch (SAXException e1) {
          // Documento con malformación XML
          ArrayList<String> malformacion = new ArrayList<String>();
@@ -492,33 +571,44 @@ public class Sint82P2 extends HttpServlet {
          Element el = document.getDocumentElement();
          NodeList nl = el.getElementsByTagName("Fecha");
          Node n = (Node) nl.item(0);
-         
-         if (n.getTextContent().equals(fecha)) { // Buscamos dentro de los archivos los que coincidan con la fecha
-         int i;
-         NodeList program_nodes=null;
-            try{
-             program_nodes= (NodeList) xpath.evaluate("//Canal[NombreCanal =\""+ canal +"\"]/Programa", document.getDocumentElement(), XPathConstants.NODESET);
-         } catch (XPathExpressionException e) {
-            // Expresión XPath incorrecta (no debería darse nunca este error)
-            e.printStackTrace();
-            return ;
-         }
-   
-            for(i=0;i<program_nodes.getLength();i++)
-            {
-               Programa p_aux= new Programa();
-               Node program=(Node) program_nodes.item(i);
-               NodeList p_elems= program.getChildNodes();
-               int j;
-               for (j=0; j<p_elems.getLength();j++)
-               {
-                  if(p_elems.item(j).getNodeName().equals("HoraInicio"))p_aux.sethora(p_elems.item(j).getTextContent());
-                  if(p_elems.item(j).getNodeName().equals("NombrePrograma")) p_aux.setpelicula(p_elems.item(j).getTextContent());
-               }
-               
-               program_list.add(p_aux);
-               System.out.println(p_aux.getpelicula() + "         "+p_aux.gethora());
 
+         if (n.getTextContent().equals(fecha)) { // Buscamos dentro de los archivos los que coincidan con la fecha
+            int i;
+            NodeList program_nodes = null;
+            try {
+               program_nodes = (NodeList) xpath.evaluate(
+                     "//Canal[NombreCanal =\"" + canal + "\"]/Programa[Categoria=\"Cine\"]",
+                     document.getDocumentElement(), XPathConstants.NODESET);
+            } catch (XPathExpressionException e) {
+               // Expresión XPath incorrecta (no debería darse nunca este error)
+               e.printStackTrace();
+               return;
+            }
+
+            for (i = 0; i < program_nodes.getLength(); i++) {
+               Programa p_aux = new Programa();
+               Node program = (Node) program_nodes.item(i);
+               NodeList p_elems = program.getChildNodes();
+               int j;
+               for (j = 0; j < p_elems.getLength(); j++) {
+                  if (p_elems.item(j).getNodeName().equals("HoraInicio"))
+                     p_aux.sethora(p_elems.item(j).getTextContent());
+                  if (p_elems.item(j).getNodeName().equals("NombrePrograma"))
+                     p_aux.setpelicula(p_elems.item(j).getTextContent());
+                  if (p_elems.item(j).getNodeType() == Node.TEXT_NODE) {
+                     if (!p_elems.item(j).getTextContent().isBlank()) // Si no es una cadena en blanco lo guardamos
+                        p_aux.setcomentario(p_elems.item(j).getTextContent());
+                  }
+               }
+
+               NamedNodeMap p_attr = program.getAttributes();
+               for (j = 0; j < p_attr.getLength(); j++) {
+                  if (p_attr.item(j).getNodeName().equals("edadminima"))
+                     p_aux.setedad(p_attr.item(j).getTextContent());
+               }
+
+               program_list.add(p_aux);
+               System.out.println(p_aux.getpelicula() + "         " + p_aux.gethora());
 
             }
 

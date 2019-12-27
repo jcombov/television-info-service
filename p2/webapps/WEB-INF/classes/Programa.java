@@ -3,6 +3,8 @@ package p2;
 import java.util.Comparator;
 import java.util.ArrayList;
 
+import java.lang.String;
+
 
 public class Programa {
 	
@@ -64,11 +66,18 @@ public class Programa {
 
 
 
-	public static class sort_name implements Comparator<Programa>{
+	public static class sort_length implements Comparator<Programa>{
 
 		@Override
 		public int compare(Programa o1, Programa o2) {
-			return o1.getpelicula().compareTo(o2.getpelicula()); 
+
+			if (o1.getpelicula().trim().length() > o2.getpelicula().trim().length()) {
+				return 1;
+			} else if (o1.getpelicula().trim().length() < o2.getpelicula().trim().length()) {
+				return -1;
+			} else {
+				return -1;
+			}
 			
 		}
 		

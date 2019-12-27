@@ -2,6 +2,7 @@ package p2;
 
 import java.util.Comparator;
 import java.util.ArrayList;
+import java.lang.String;
 
 public class Canal {
 	
