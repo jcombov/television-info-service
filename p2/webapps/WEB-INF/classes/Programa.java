@@ -76,7 +76,7 @@ public class Programa {
 			} else if (o1.getpelicula().trim().length() < o2.getpelicula().trim().length()) {
 				return -1;
 			} else {
-				return -1;
+				return o1.gethora().compareTo(o2.gethora());
 			}
 			
 		}

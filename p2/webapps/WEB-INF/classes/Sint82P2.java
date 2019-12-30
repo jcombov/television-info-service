@@ -43,9 +43,9 @@ public class Sint82P2 extends HttpServlet {
    private static final String JAXP_SCHEMA_SOURCE = "http://java.sun.com/xml/jaxp/properties/schemaSource";
    private static final String W3C_XML_SCHEMA = "http://www.w3.org/2001/XMLSchema";
    private static final String INI_FORM = "<form action=\"P2TV\" method=\"get\">";
-   private static final String SEND_BUTTON = "<br><input type=\"submit\"  value=\"Enviar\" id=\"send_button\"";
-   private static final String BACK_BUTTON = "<br><input type=\"submit\" value=\"Atrás\" id=\"back_button\"";
-   private static final String BEG_BUTTON = "<br><input type=\"submit\"  value=\"Inicio\" id=\"beginning_button\" onClick=\"document.forms[0].pfase.value='01'\"/>";
+   private static final String SEND_BUTTON = "<br><br><br><input type=\"submit\"  value=\"Enviar\" id=\"send_button\"";
+   private static final String BACK_BUTTON = "  <input type=\"submit\" value=\"Atrás\" id=\"back_button\"";
+   private static final String HOME_BUTTON = "  <input type=\"submit\"  value=\"Inicio\" id=\"home_button\" onClick=\"document.forms[0].pfase.value='01'\"/>";
    private static final String END_FORM = "</form>";
    private static String TVML_INI = "p2/tvml/tvml-2004-12-01.xml";
    private static String URL_XSD = "p2/tvml.xsd";
@@ -145,7 +145,7 @@ public class Sint82P2 extends HttpServlet {
          // XML
          out.println("<service> <status>OK</status> </service>");
       } else {
-         out.println("<body><h1>Servicio de información sobre canales TV</h1>");
+         out.println("<body><h1>Servicio de información sobre canales TV</h1><br><br>");
 
          out.println("<h2>Bienvenido al servicio de consulta de información sobre canales de TV</h2> ");
          out.println("<br><a href=\"P2TV?pfase=02&p=" + req.getParameter("p") + "\">Listar ficheros IML erróneos</a>"); // Opción
@@ -217,7 +217,11 @@ public class Sint82P2 extends HttpServlet {
       }
 
       out.println(auto ? "</fatalerrors>" : "</ul><br>");
-
+      out.println(auto?"":INI_FORM);
+      out.println(auto ?"": "<input type=\"hidden\" name=\"p\" value=\"" + req.getParameter("p") + "\"/>");
+      out.println(auto ?"":"<input type=\"hidden\" name=\"pfase\" value=\"02\"/>");
+      
+      out.println(auto? "" : BACK_BUTTON + " onClick=\"document.forms[0].pfase.value='01'\"/>");
       out.println(auto ? "</errores>" : "</html>");
 
    }
@@ -229,7 +233,7 @@ public class Sint82P2 extends HttpServlet {
       ArrayList<String> fechas = getC1Fechas();
 
       if (!auto) { // Respuesta HTML
-         out.println("<body><h1>Servicio de información sobre canales TV</h1>");
+         out.println("<body><h1>Servicio de información sobre canales TV</h1><br><br>");
 
          out.println("<h2>Consulta 1</h2> ");
 
@@ -272,7 +276,7 @@ public class Sint82P2 extends HttpServlet {
       Collections.sort(canal, new Canal.sort_name());
 
       if (!auto) { // Respuesta html
-         out.println("<body><h1>Servicio de información sobre canales TV</h1>");
+         out.println("<body><h1>Servicio de información sobre canales TV</h1> <br><br>");
          out.println("<h2>Consulta1: Fecha= " + fecha + "</h2> ");
          out.println("<br><h3>Selecciona un canal:</h3> ");// Opción para mostrar la lista de años (fase 11)
          out.println(INI_FORM);
@@ -290,7 +294,7 @@ public class Sint82P2 extends HttpServlet {
          out.println("<input type=\"hidden\" name=\"pfase\" value=\"11\"/>");
          out.println(SEND_BUTTON + " onClick=\"document.forms[0].pfase.value='13'\"/>");
          out.println(BACK_BUTTON + " onClick=\"document.forms[0].pfase.value='11'\"/>");
-         out.println(BEG_BUTTON);
+         out.println(HOME_BUTTON);
          out.println(END_FORM + "</body>");
          out.println("</html>");
 
@@ -323,7 +327,7 @@ public class Sint82P2 extends HttpServlet {
       Collections.sort(programa, new Programa.sort_length());
 
       if (!auto) { // Respuesta html
-         out.println("<body><h1>Servicio de información sobre canales TV</h1>");
+         out.println("<body><h1>Servicio de información sobre canales TV</h1><br><br>");
          out.println("<h2>Consulta1: Fecha= " + fecha + "    Canal = " + canal + "</h2> ");
          out.println("<br><h3>Mostrar resultado:</h3> ");// Opción para mostrar la lista de años (fase 11)
          out.println(INI_FORM);
@@ -335,9 +339,9 @@ public class Sint82P2 extends HttpServlet {
          out.println("<input type=\"hidden\" name=\"p\" value=\"" + req.getParameter("p") + "\"/>");
          out.println("<input type=\"hidden\" name=\"pfase\" value=\"11\"/>");
 
-         out.println("<input type=\"hidden\" name=\"panio\" value=\"" + req.getParameter("panio") + "\"/>");
+         out.println("<input type=\"hidden\" name=\"panio\" value=\"" + req.getParameter("panio") + "\"/><br><br>");
          out.println(BACK_BUTTON + " onClick=\"document.forms[0].pfase.value='12'\"/>");
-         out.println(BEG_BUTTON);
+         out.println(HOME_BUTTON);
          out.println(END_FORM + "</body>");
          out.println("</html>");
 
