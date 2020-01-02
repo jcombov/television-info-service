@@ -47,33 +47,40 @@ public class Sint82P2 extends HttpServlet {
    private static final String BACK_BUTTON = "  <input type=\"submit\" value=\"Atrás\" id=\"back_button\"";
    private static final String HOME_BUTTON = "  <input type=\"submit\"  value=\"Inicio\" id=\"home_button\" onClick=\"document.forms[0].pfase.value='01'\"/>";
    private static final String END_FORM = "</form>";
-   private static String TVML_INI = "p2/tvml/tvml-2004-12-01.xml";
+   private static String TVML_INI = "/Users/sint/tvml-2004-12-01.xml";
+   //private static String TVML_INI = "p2/tvml/tvml-2004-12-01.xml";
    private static String URL_XSD = "p2/tvml.xsd";
 
    public void init(ServletConfig config) {
       // Empezamos leyendo el fichero inicial, y a partir de él sacamos el resto
       URL_XSD = config.getServletContext().getRealPath(URL_XSD);
-      TVML_INI = config.getServletContext().getRealPath(TVML_INI);
+      //TVML_INI = config.getServletContext().getRealPath(TVML_INI);
       TVML_browser(TVML_INI);
       // A partir de aquí, ya podemos procesar peticiones GET de los clientes
 
    }
 
    public void doGet(HttpServletRequest req, HttpServletResponse res) throws IOException, ServletException {
-      res.setContentType("text/html");
-      PrintWriter out = res.getWriter();
+      
+      
       String p = req.getParameter("p");
       String pfase = req.getParameter("pfase");
       boolean auto = req.getParameter("auto") == null ? false : req.getParameter("auto").equals("si");
+      PrintWriter out= null;
 
       if (auto) {
          res.setContentType("text/xml");
-         out.println("<?xml version=\"1.0\" encoding=\"utf-8\"?>");
+         res.setCharacterEncoding("UTF-8");
+         out = res.getWriter();
+         System.out.println("Codificacion--->"+res.getCharacterEncoding());
+         out.println("<?xml version=\"1.0\" encoding=\"UTF-8\"?>");
       } else {
          res.setContentType("text/html");
+         res.setCharacterEncoding("UTF-8");
+         out = res.getWriter();
          out.println("<html>");
          out.println("<head>");
-         out.println("<title>Servicio de información musical</title>"); // título de la página
+         out.println("<title>Servicio de información TV</title>"); // título de la página
          out.println("<meta charset=\"UTF-8\"/>"); // codificación de la página (UTF-8)
          out.println("<LINK rel=\"stylesheet\" href=\"p2/p2.css\"     type=\"text/css\" />");
          out.println("</head>");
@@ -148,7 +155,7 @@ public class Sint82P2 extends HttpServlet {
          out.println("<body><h1>Servicio de información sobre canales TV</h1><br><br>");
 
          out.println("<h2>Bienvenido al servicio de consulta de información sobre canales de TV</h2> ");
-         out.println("<br><a href=\"P2TV?pfase=02&p=" + req.getParameter("p") + "\">Listar ficheros IML erróneos</a>"); // Opción
+         out.println("<br><a href=\"P2TV?pfase=02&p=" + req.getParameter("p") + "\">Listar ficheros TVML erróneos</a>"); // Opción
                                                                                                                         // para
                                                                                                                         // mostrar
                                                                                                                         // los
@@ -237,13 +244,13 @@ public class Sint82P2 extends HttpServlet {
 
          out.println("<h2>Consulta 1</h2> ");
 
-         out.println("<br><h3>Selecciona una fecha:</h3> "); // Opción para mostrar la lista de años (fase 11)
+         out.println("<br><h3>Selecciona una fecha:</h3> "); 
          out.println(INI_FORM);
          for (i = 0; i < fechas.size(); i++) {
             out.println(i == 0
-                  ? "<input type=\"radio\" name=\"panio\" class=\"form_input\" value=\"" + fechas.get(i)
+                  ? "<input type=\"radio\" name=\"pdia\" class=\"form_input\" value=\"" + fechas.get(i)
                         + "\" checked/>  " + fechas.get(i) + "<br>"
-                  : "<input type=\"radio\" name=\"panio\" class=\"form_input\" value=\"" + fechas.get(i) + "\" />  "
+                  : "<input type=\"radio\" name=\"pdia\" class=\"form_input\" value=\"" + fechas.get(i) + "\" />  "
                         + fechas.get(i) + "<br>");
          }
          out.println("<input type=\"hidden\" name=\"p\" value=\"" + req.getParameter("p") + "\"/>");
@@ -269,7 +276,7 @@ public class Sint82P2 extends HttpServlet {
    private void doGetFase12(HttpServletRequest req, HttpServletResponse res) throws IOException, ServletException {
 
       PrintWriter out = res.getWriter();
-      String fecha = req.getParameter("panio");
+      String fecha = req.getParameter("pdia");
       boolean auto = req.getParameter("auto") == null ? false : req.getParameter("auto").equals("si");
       int i;
       ArrayList<Canal> canal = getC1Canales(fecha);
@@ -278,7 +285,7 @@ public class Sint82P2 extends HttpServlet {
       if (!auto) { // Respuesta html
          out.println("<body><h1>Servicio de información sobre canales TV</h1> <br><br>");
          out.println("<h2>Consulta1: Fecha= " + fecha + "</h2> ");
-         out.println("<br><h3>Selecciona un canal:</h3> ");// Opción para mostrar la lista de años (fase 11)
+         out.println("<br><h3>Selecciona un canal:</h3> ");
          out.println(INI_FORM);
          for (i = 0; i < canal.size(); i++) {
             out.println(i == 0
@@ -290,7 +297,7 @@ public class Sint82P2 extends HttpServlet {
                         + canal.get(i).getidioma() + "<b>  Grupo:  </b>" + canal.get(i).getgrupo() + "<br>");
          }
          out.println("<input type=\"hidden\" name=\"p\" value=\"" + req.getParameter("p") + "\"/>");
-         out.println("<input type=\"hidden\" name=\"panio\" value=\"" + req.getParameter("panio") + "\"/>");
+         out.println("<input type=\"hidden\" name=\"pdia\" value=\"" + req.getParameter("pdia") + "\"/>");
          out.println("<input type=\"hidden\" name=\"pfase\" value=\"11\"/>");
          out.println(SEND_BUTTON + " onClick=\"document.forms[0].pfase.value='13'\"/>");
          out.println(BACK_BUTTON + " onClick=\"document.forms[0].pfase.value='11'\"/>");
@@ -300,8 +307,8 @@ public class Sint82P2 extends HttpServlet {
 
       } else { // Respuesta xml
 
-         if (fecha == null) { // No hay parametro panio
-            out.println("<wrongRequest>no param:panio</wrongRequest>");
+         if (fecha == null) { // No hay parametro pdia
+            out.println("<wrongRequest>no param:pdia</wrongRequest>");
             
          } else {
             out.println("<canales>");
@@ -319,7 +326,7 @@ public class Sint82P2 extends HttpServlet {
    private void doGetFase13(HttpServletRequest req, HttpServletResponse res) throws IOException, ServletException {
 
       PrintWriter out = res.getWriter();
-      String fecha = req.getParameter("panio");
+      String fecha = req.getParameter("pdia");
       String canal = req.getParameter("pcanal");
       boolean auto = req.getParameter("auto") == null ? false : req.getParameter("auto").equals("si");
       int i;
@@ -329,17 +336,17 @@ public class Sint82P2 extends HttpServlet {
       if (!auto) { // Respuesta html
          out.println("<body><h1>Servicio de información sobre canales TV</h1><br><br>");
          out.println("<h2>Consulta1: Fecha= " + fecha + "    Canal = " + canal + "</h2> ");
-         out.println("<br><h3>Mostrar resultado:</h3> ");// Opción para mostrar la lista de años (fase 11)
+         out.println("<br><h3>Mostrar resultado:</h3> ");
          out.println(INI_FORM);
          for (i = 0; i < programa.size(); i++) {
             out.println((i + 1) + "<b> . Titulo:  </b>" + programa.get(i).getpelicula() + "<b>  Hora:  </b>"
                   + programa.get(i).gethora() + "<b>  Edad Minima:  </b>" + programa.get(i).getedad()
-                  + "<b>  Resumen:  </b>" + programa.get(i).getcomentario() + "<br>");
+                  + "<b>  Resumen:  </b>" + programa.get(i).getcomentario().trim() + "<br>");
          }
          out.println("<input type=\"hidden\" name=\"p\" value=\"" + req.getParameter("p") + "\"/>");
          out.println("<input type=\"hidden\" name=\"pfase\" value=\"11\"/>");
 
-         out.println("<input type=\"hidden\" name=\"panio\" value=\"" + req.getParameter("panio") + "\"/><br><br>");
+         out.println("<input type=\"hidden\" name=\"pdia\" value=\"" + req.getParameter("pdia") + "\"/><br><br>");
          out.println(BACK_BUTTON + " onClick=\"document.forms[0].pfase.value='12'\"/>");
          out.println(HOME_BUTTON);
          out.println(END_FORM + "</body>");
@@ -347,8 +354,8 @@ public class Sint82P2 extends HttpServlet {
 
       } else { // Respuesta xml
 
-         if (fecha == null) { // No hay parametro panio
-            out.println("<wrongRequest>no param:panio</wrongRequest>");
+         if (fecha == null) { // No hay parametro pdia
+            out.println("<wrongRequest>no param:pdia</wrongRequest>");
 
          } else if (canal == null) { // No hay parametro pcanal
             out.println("<wrongRequest>no param:pcanal</wrongRequest>");
@@ -358,7 +365,7 @@ public class Sint82P2 extends HttpServlet {
             for (i = 0; i < programa.size(); i++) {
 
                out.println("<pelicula edad=\"" + programa.get(i).getedad() + "\" hora=\"" + programa.get(i).gethora()
-                     + "\" resumen=\"" + programa.get(i).getcomentario() + "\">" + programa.get(i).getpelicula()
+                     + "\" resumen=\"" + programa.get(i).getcomentario().trim() + "\">" + programa.get(i).getpelicula()
                      + "</pelicula>");
             }
             out.println("</peliculas>");
@@ -370,7 +377,7 @@ public class Sint82P2 extends HttpServlet {
    private void TVML_browser(String fichero) {
       System.out.println("EMPEZAMOS");
       DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
-      ficherosTVML = new TreeMap<String, Document>(); // inicializa el árbol de ficheros IML...
+      ficherosTVML = new TreeMap<String, Document>(); 
       warnings = new TreeMap<String, ArrayList<String>>(); // inicializa el registro de warnings...
       errores = new TreeMap<String, ArrayList<String>>(); // ... el de errores...
       erroresFatales = new TreeMap<String, ArrayList<String>>(); // ... el de errores fatales
@@ -405,14 +412,14 @@ public class Sint82P2 extends HttpServlet {
 
       DocumentBuilder dbuilder = factory.newDocumentBuilder();
       XMLErrorHandler errorHandler = new XMLErrorHandler(fichero); // se encarga de validar la sintaxis XML del
-                                                                   // documento (no el schema!)
+                                                                   // documento 
       dbuilder.setErrorHandler(errorHandler);
       Document doc = null;
       try {
 
-         doc = dbuilder.parse(new InputSource(new FileInputStream(fichero))); // lee el fichero IML base,...
-         // doc = dbuilder.parse(new InputSource(new URL(fichero).openStream())); // lee
-         // el fichero IML base,...
+         doc = dbuilder.parse(new InputSource(new FileInputStream(fichero))); // lee el fichero TVML
+         // doc = dbuilder.parse(new InputSource(new URL(fichero).openStream())); 
+        
       } catch (SAXException e1) {
          // Documento con malformación XML
          ArrayList<String> malformacion = new ArrayList<String>();
@@ -440,8 +447,8 @@ public class Sint82P2 extends HttpServlet {
       private String nombreFichero;
       private boolean correcto = true;
 
-      XMLErrorHandler(String ficheroIML) {
-         this.nombreFichero = ficheroIML;
+      XMLErrorHandler(String fichero) {
+         this.nombreFichero = fichero;
       }
 
       public void warning(SAXParseException spe) {
@@ -541,9 +548,9 @@ public class Sint82P2 extends HttpServlet {
 
                   String parameter = channel_nodes.item(i).getNodeName();
                   if (parameter.equals("NombreCanal"))
-                     c_aux.setcanal(channel_nodes.item(i).getTextContent());
+                     c_aux.setcanal(channel_nodes.item(i).getTextContent().trim());
                   if (parameter.equals("Grupo"))
-                     c_aux.setgrupo(channel_nodes.item(i).getTextContent());
+                     c_aux.setgrupo(channel_nodes.item(i).getTextContent().trim());
 
                }
 
@@ -552,7 +559,7 @@ public class Sint82P2 extends HttpServlet {
                for (i = 0; i < channel_attributes.getLength(); i++) {
                   String attribute = channel_attributes.item(i).getNodeName();
                   if (attribute.equals("lang"))
-                     c_aux.setidioma(channel_attributes.item(i).getTextContent());
+                     c_aux.setidioma(channel_attributes.item(i).getTextContent().trim());
                }
 
                channel_list.add(c_aux);
@@ -569,7 +576,7 @@ public class Sint82P2 extends HttpServlet {
    private ArrayList<Programa> getC1Peliculas(String fecha, String canal) {
 
       ArrayList<Programa> program_list = new ArrayList<Programa>();
-      XPath xpath = XPathFactory.newInstance().newXPath(); // Usaremos XPath para obtener las canciones de un disco
+      XPath xpath = XPathFactory.newInstance().newXPath(); 
 
       ficherosTVML.forEach((name, document) -> {
          Element el = document.getDocumentElement();
@@ -596,12 +603,12 @@ public class Sint82P2 extends HttpServlet {
                int j;
                for (j = 0; j < p_elems.getLength(); j++) {
                   if (p_elems.item(j).getNodeName().equals("HoraInicio"))
-                     p_aux.sethora(p_elems.item(j).getTextContent());
+                     p_aux.sethora(p_elems.item(j).getTextContent().trim());
                   if (p_elems.item(j).getNodeName().equals("NombrePrograma"))
-                     p_aux.setpelicula(p_elems.item(j).getTextContent());
+                     p_aux.setpelicula(p_elems.item(j).getTextContent().trim());
                   if (p_elems.item(j).getNodeType() == Node.TEXT_NODE) {
-                     if (!p_elems.item(j).getTextContent().isBlank()) // Si no es una cadena en blanco lo guardamos
-                        p_aux.setcomentario(p_elems.item(j).getTextContent());
+                     if (!is_blank(p_elems.item(j).getTextContent())) // Si no es una cadena en blanco lo guardamos
+                        p_aux.setcomentario(p_elems.item(j).getTextContent().trim());
                   }
                }
 
@@ -610,9 +617,9 @@ public class Sint82P2 extends HttpServlet {
                   if (p_attr.item(j).getNodeName().equals("edadminima"))
                      p_aux.setedad(p_attr.item(j).getTextContent());
                }
-
+               if(p_aux.getcomentario()==null) p_aux.setcomentario("");
                program_list.add(p_aux);
-               System.out.println(p_aux.getpelicula() + "         " + p_aux.gethora());
+               System.out.println(p_aux.getpelicula() + "  " + p_aux.gethora() + "  "+ p_aux.getcomentario());
 
             }
 
@@ -622,5 +629,16 @@ public class Sint82P2 extends HttpServlet {
       return program_list;
 
    }
+
+
+private boolean is_blank(String text){
+   boolean containsWhitespace = true;
+for (int i = 0; i < text.length() && containsWhitespace; i++) {
+    if (!Character.isWhitespace(text.charAt(i))) {
+        containsWhitespace = false;
+    }
+}
+return containsWhitespace;
+}
 
 }

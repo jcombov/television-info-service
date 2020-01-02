@@ -6,9 +6,9 @@ import java.lang.String;
 
 public class Canal {
 	
-	private String canal; // identificador tipo IDD_DISCO-XX de la canción
+	private String canal; 
 	private String grupo;
-	private String idioma; // idioma del canal
+	private String idioma;
 	
 
 	public Canal(){
